@@ -12,6 +12,8 @@ Relations:
 * `boundary=administrative` and `type=boundary` and `admin_level=2|3|4`
 * `boundary=nature_reserve`
 * `boundary=national_park`
+* `natural=glacier`
+* `natural=water`
 
 Ways:
 * `highway=motorway`
@@ -19,6 +21,9 @@ Ways:
 * `railway=rail`
 * `natural=glacier`
 * `natural=water`
+* `boundary=administrative` and `type=boundary` and `admin_level=2|3|4`
+* `boundary=nature_reserve`
+* `boundary=national_park`
 
 Nodes:
 * `place=city`
