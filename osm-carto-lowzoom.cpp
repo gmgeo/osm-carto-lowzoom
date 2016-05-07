@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 
   auto input_begin = osmium::io::InputIterator<osmium::io::Reader, osmium::OSMObject> {reader3};
   auto input_end = osmium::io::InputIterator<osmium::io::Reader, osmium::OSMObject> {};
-  auto output_iterator = osmium::io::OutputIterator<osmium::io::Writer> {writer, 100 * 1024};
+  auto output_iterator = osmium::io::OutputIterator<osmium::io::Writer> {writer};
 
   std::copy_if(input_begin, input_end, output_iterator, [&id_store](const osmium::OSMObject& obj) {
     auto id = id_store.find(obj.id());
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
     return false;
   });
 
-  output_iterator.flush();
+  writer.flush();
   writer.close();
   reader3.close();
 
