@@ -23,7 +23,8 @@ public:
   void node(const osmium::Node& node) {
     std::string place(node.tags()["place"] ? node.tags()["place"] : "");
 
-    if (!place.empty() && (place == std::string("city") || place == std::string("town"))) {
+    if (!place.empty() && (place == std::string("city") || place == std::string("town") ||
+        place == std::string("village") || place == std::string("hamlet"))) {
       id_store[node.id()] = osmium::item_type::node;
     }
   }

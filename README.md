@@ -29,6 +29,8 @@ Ways:
 Nodes:
 * `place=city`
 * `place=town`
+* `place=village`
+* `place=hamlet`
 
 ## Compiling
 
