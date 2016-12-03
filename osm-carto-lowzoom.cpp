@@ -92,6 +92,46 @@ public:
   }
 };
 
+class FerryHandler : public osmium::handler::Handler {
+
+  std::unordered_map<long long int, osmium::item_type>& id_store;
+
+public:
+
+  FerryHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
+  : id_store(id_store_) {}
+
+  void way(const osmium::Way& way) {
+
+    std::string natural(way.tags()["route"] ? way.tags()["route"] : "");
+
+    if (natural == std::string("ferry")) {
+      auto id = id_store.find(way.id());
+      if (id != id_store.end()) {
+        id_store[way.id()] = osmium::item_type::way;
+        for (const osmium::NodeRef& nr : way.nodes()) {
+            id_store[nr.ref()] = osmium::item_type::node;
+        }
+      }
+    }
+  }
+
+  void relation(const osmium::Relation& rel) {
+    std::string natural(rel.tags()["route"] ? rel.tags()["route"] : "");
+
+    if (natural == std::string("ferry")) {
+      id_store[rel.id()] = osmium::item_type::relation;
+
+      const osmium::RelationMemberList& rml = rel.members();
+      for (const osmium::RelationMember& rm : rml) {
+        if (rm.type() == osmium::item_type::way) {
+          id_store[rm.ref()] = rm.type();
+        }
+      }
+    }
+  }
+};
+
 class AdminHandler : public osmium::handler::Handler {
 
   std::unordered_map<long long int, osmium::item_type>& id_store;
@@ -181,8 +221,9 @@ int main(int argc, char* argv[]) {
   osmium::io::Reader reader1(input_file, osmium::osm_entity_bits::relation); // we need only relations this time
   AdminHandler admin_handler(id_store);
   GlacierHandler glacier_handler(id_store);
+  FerryHandler ferry_handler(id_store);
 
-  osmium::apply(reader1, admin_handler, glacier_handler);
+  osmium::apply(reader1, admin_handler, glacier_handler, ferry_handler);
   reader1.close();
 
   std::cerr << "pass 2 - getting place nodes and nodes of ways\n";

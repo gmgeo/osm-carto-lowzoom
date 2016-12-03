@@ -24,6 +24,7 @@ Ways:
 * `boundary=administrative` and `type=boundary` and `admin_level=2|3|4`
 * `boundary=nature_reserve`
 * `boundary=national_park`
+* `route=ferry`
 
 Nodes:
 * `place=city`
