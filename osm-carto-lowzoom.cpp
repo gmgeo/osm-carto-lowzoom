@@ -235,7 +235,8 @@ int main(int argc, char* argv[]) {
 
   osmium::io::Reader reader2(input_file, osmium::osm_entity_bits::way | osmium::osm_entity_bits::node);
 
-  osmium::apply(reader2, admin_handler, ferry_handler, glacier_handler, highway_handler, place_handler, relation_way_handler);
+  // make sure relation_way_handler comes first so that other way-node refs are not read twice
+  osmium::apply(reader2, relation_way_handler, admin_handler, ferry_handler, glacier_handler, highway_handler, place_handler);
   reader2.close();
 
   std::cerr << "pass 3 - writing objects to file\n";
