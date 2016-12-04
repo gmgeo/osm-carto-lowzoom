@@ -11,62 +11,24 @@
 #include <osmium/handler.hpp>
 #include <osmium/osm/types.hpp>
 
-class PlaceHandler : public osmium::handler::Handler {
+class AdminHandler : public osmium::handler::Handler {
 
   std::unordered_map<long long int, osmium::item_type>& id_store;
 
 public:
 
-  PlaceHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
-  : id_store(id_store_) {}
-
-  void node(const osmium::Node& node) {
-    std::string place(node.tags()["place"] ? node.tags()["place"] : "");
-
-    if (!place.empty() && (place == std::string("city") || place == std::string("town") ||
-        place == std::string("village") || place == std::string("hamlet"))) {
-      id_store[node.id()] = osmium::item_type::node;
-    }
-  }
-};
-
-class HighwayHandler : public osmium::handler::Handler {
-
-  std::unordered_map<long long int, osmium::item_type>& id_store;
-
-public:
-
-  HighwayHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
+  AdminHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
   : id_store(id_store_) {}
 
   void way(const osmium::Way& way) {
+    std::string boundary(way.tags()["boundary"] ? way.tags()["boundary"] : "");
+    std::string type(way.tags()["type"] ? way.tags()["type"] : "");
+    std::string admin_level(way.tags()["admin_level"] ? way.tags()["admin_level"] : "");
 
-    std::string highway(way.tags()["highway"] ? way.tags()["highway"] : "");
-    std::string railway(way.tags()["railway"] ? way.tags()["railway"] : "");
+    if ((boundary == std::string("administrative") && type == std::string("boundary") &&
+      (admin_level == std::string("2") || admin_level == std::string("3") || admin_level == std::string("4"))) ||
+      boundary == std::string("nature_reserve") || boundary == std::string("national_park")) {
 
-    if (highway == std::string("motorway") || highway == std::string("trunk") || railway == std::string("rail")) {
-      id_store[way.id()] = osmium::item_type::way;
-      for (const osmium::NodeRef& nr : way.nodes()) {
-          id_store[nr.ref()] = osmium::item_type::node;
-      }
-    }
-  }
-};
-
-class GlacierHandler : public osmium::handler::Handler {
-
-  std::unordered_map<long long int, osmium::item_type>& id_store;
-
-public:
-
-  GlacierHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
-  : id_store(id_store_) {}
-
-  void way(const osmium::Way& way) {
-
-    std::string natural(way.tags()["natural"] ? way.tags()["natural"] : "");
-
-    if (natural == std::string("glacier") || natural == std::string("water")) {
       auto id = id_store.find(way.id());
       if (id != id_store.end()) {
         id_store[way.id()] = osmium::item_type::way;
@@ -78,9 +40,15 @@ public:
   }
 
   void relation(const osmium::Relation& rel) {
-    std::string natural(rel.tags()["natural"] ? rel.tags()["natural"] : "");
+    std::string boundary(rel.tags()["boundary"] ? rel.tags()["boundary"] : "");
+    std::string type(rel.tags()["type"] ? rel.tags()["type"] : "");
+    std::string admin_level(rel.tags()["admin_level"] ? rel.tags()["admin_level"] : "");
 
-    if (natural == std::string("glacier") || natural == std::string("water")) {
+    // add boundary relations
+    if ((boundary == std::string("administrative") && type == std::string("boundary") &&
+      (admin_level == std::string("2") || admin_level == std::string("3") || admin_level == std::string("4"))) ||
+      boundary == std::string("nature_reserve") || boundary == std::string("national_park")) {
+
       id_store[rel.id()] = osmium::item_type::relation;
 
       const osmium::RelationMemberList& rml = rel.members();
@@ -133,24 +101,20 @@ public:
   }
 };
 
-class AdminHandler : public osmium::handler::Handler {
+class GlacierHandler : public osmium::handler::Handler {
 
   std::unordered_map<long long int, osmium::item_type>& id_store;
 
 public:
 
-  AdminHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
+  GlacierHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
   : id_store(id_store_) {}
 
   void way(const osmium::Way& way) {
-    std::string boundary(way.tags()["boundary"] ? way.tags()["boundary"] : "");
-    std::string type(way.tags()["type"] ? way.tags()["type"] : "");
-    std::string admin_level(way.tags()["admin_level"] ? way.tags()["admin_level"] : "");
 
-    if ((boundary == std::string("administrative") && type == std::string("boundary") &&
-      (admin_level == std::string("2") || admin_level == std::string("3") || admin_level == std::string("4"))) ||
-      boundary == std::string("nature_reserve") || boundary == std::string("national_park")) {
+    std::string natural(way.tags()["natural"] ? way.tags()["natural"] : "");
 
+    if (natural == std::string("glacier") || natural == std::string("water")) {
       auto id = id_store.find(way.id());
       if (id != id_store.end()) {
         id_store[way.id()] = osmium::item_type::way;
@@ -162,15 +126,9 @@ public:
   }
 
   void relation(const osmium::Relation& rel) {
-    std::string boundary(rel.tags()["boundary"] ? rel.tags()["boundary"] : "");
-    std::string type(rel.tags()["type"] ? rel.tags()["type"] : "");
-    std::string admin_level(rel.tags()["admin_level"] ? rel.tags()["admin_level"] : "");
+    std::string natural(rel.tags()["natural"] ? rel.tags()["natural"] : "");
 
-    // add boundary relations
-    if ((boundary == std::string("administrative") && type == std::string("boundary") &&
-      (admin_level == std::string("2") || admin_level == std::string("3") || admin_level == std::string("4"))) ||
-      boundary == std::string("nature_reserve") || boundary == std::string("national_park")) {
-
+    if (natural == std::string("glacier") || natural == std::string("water")) {
       id_store[rel.id()] = osmium::item_type::relation;
 
       const osmium::RelationMemberList& rml = rel.members();
@@ -179,6 +137,48 @@ public:
           id_store[rm.ref()] = rm.type();
         }
       }
+    }
+  }
+};
+
+class HighwayHandler : public osmium::handler::Handler {
+
+  std::unordered_map<long long int, osmium::item_type>& id_store;
+
+public:
+
+  HighwayHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
+  : id_store(id_store_) {}
+
+  void way(const osmium::Way& way) {
+
+    std::string highway(way.tags()["highway"] ? way.tags()["highway"] : "");
+    std::string railway(way.tags()["railway"] ? way.tags()["railway"] : "");
+
+    if (highway == std::string("motorway") || highway == std::string("trunk") || railway == std::string("rail")) {
+      id_store[way.id()] = osmium::item_type::way;
+      for (const osmium::NodeRef& nr : way.nodes()) {
+          id_store[nr.ref()] = osmium::item_type::node;
+      }
+    }
+  }
+};
+
+class PlaceHandler : public osmium::handler::Handler {
+
+  std::unordered_map<long long int, osmium::item_type>& id_store;
+
+public:
+
+  PlaceHandler(std::unordered_map<long long int, osmium::item_type>& id_store_)
+  : id_store(id_store_) {}
+
+  void node(const osmium::Node& node) {
+    std::string place(node.tags()["place"] ? node.tags()["place"] : "");
+
+    if (!place.empty() && (place == std::string("city") || place == std::string("town") ||
+        place == std::string("village") || place == std::string("hamlet"))) {
+      id_store[node.id()] = osmium::item_type::node;
     }
   }
 };
@@ -217,24 +217,25 @@ int main(int argc, char* argv[]) {
 
   std::unordered_map<long long int, osmium::item_type> id_store;
 
+  AdminHandler admin_handler(id_store);
+  FerryHandler ferry_handler(id_store);
+  GlacierHandler glacier_handler(id_store);
+  HighwayHandler highway_handler(id_store);
+  PlaceHandler place_handler(id_store);
+  RelationWayHandler relation_way_handler(id_store);
+
   std::cerr << "pass 1 - getting relations and (their) ways\n";
 
   osmium::io::Reader reader1(input_file, osmium::osm_entity_bits::relation); // we need only relations this time
-  AdminHandler admin_handler(id_store);
-  GlacierHandler glacier_handler(id_store);
-  FerryHandler ferry_handler(id_store);
 
-  osmium::apply(reader1, admin_handler, glacier_handler, ferry_handler);
+  osmium::apply(reader1, admin_handler, ferry_handler, glacier_handler);
   reader1.close();
 
   std::cerr << "pass 2 - getting place nodes and nodes of ways\n";
 
   osmium::io::Reader reader2(input_file, osmium::osm_entity_bits::way | osmium::osm_entity_bits::node);
-  HighwayHandler highway_handler(id_store);
-  PlaceHandler place_handler(id_store);
-  RelationWayHandler relation_way_handler(id_store);
 
-  osmium::apply(reader2, glacier_handler, admin_handler, highway_handler, place_handler, relation_way_handler);
+  osmium::apply(reader2, admin_handler, ferry_handler, glacier_handler, highway_handler, place_handler, relation_way_handler);
   reader2.close();
 
   std::cerr << "pass 3 - writing objects to file\n";
